@@ -1,0 +1,8 @@
+Flask
+Authlib
+gspread
+oauth2client
+pandas
+plotly
+pdfkit
+gunicorn
