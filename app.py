@@ -29,6 +29,7 @@ oauth.register(
     client_secret=os.environ.get("GOOGLE_CLIENT_SECRET"),
     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
     client_kwargs={"scope": "openid email profile"},
+    userinfo_endpoint="https://openidconnect.googleapis.com/v1/userinfo"
 )
 
 # --------------------------
