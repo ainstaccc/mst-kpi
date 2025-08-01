@@ -2,27 +2,36 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>門市職能評核系統</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <title>MST-KPI 測試首頁</title>
 </head>
 <body>
-    <h1>歡迎使用門市職能評核系統</h1>
+    <h1>歡迎來到 MST-KPI 測試首頁</h1>
 
-    <!-- 這裡原本是 login 改成 index，避免 BuildError -->
-    <a href="{{ url_for('index') }}">登入 Google</a>
+    <!-- 登入連結 -->
+    <p>
+        <a href="{{ url_for('login') }}">登入 Google</a>
+    </p>
 
-    <h2>目前可用的檔案：</h2>
+    <!-- 檔案列表 -->
+    <h2>檔案列表</h2>
     <ul>
         {% for file in files %}
         <li>{{ file }}</li>
         {% endfor %}
     </ul>
 
-    <h2>查詢結果：</h2>
+    <!-- 結果列表 -->
+    <h2>結果列表</h2>
     <ul>
         {% for result in results %}
         <li>{{ result }}</li>
         {% endfor %}
     </ul>
+
+    {% if selected_file %}
+    <p>目前選擇的檔案：{{ selected_file }}</p>
+    {% else %}
+    <p>尚未選擇檔案</p>
+    {% endif %}
 </body>
 </html>
