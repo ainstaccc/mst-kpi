@@ -62,29 +62,23 @@ def login():
 @app.route("/callback")
 def callback():
     try:
-        # 取得 token
+        # Step 1: 取得 token
         token = oauth.google.authorize_access_token()
 
-        # 嘗試解析 ID Token
-        userinfo = None
-        try:
-            userinfo = oauth.google.parse_id_token(token)
-        except Exception as e:
-            print("Parse ID Token Error:", e)
-            # 若解析失敗，退而求其次呼叫 userinfo API
-            resp = oauth.google.get("userinfo")
-            userinfo = resp.json() if resp else {}
+        # Step 2: 直接使用 userinfo endpoint 取得使用者資料
+        resp = oauth.google.get("userinfo")
+        userinfo = resp.json() if resp else {}
 
-        # 檢查 userinfo 是否正確
+        # Step 3: 確認是否取得 email
         if not userinfo or "email" not in userinfo:
             return f"<h2>OAuth 錯誤</h2><p>無法取得 email，回傳內容:</p><pre>{userinfo}</pre>"
 
-        # 寫入 session
+        # Step 4: 寫入 session
         session["user"] = {"email": userinfo.get("email")}
 
         return redirect(url_for("index"))
 
-    except Exception as e:
+    except Exception:
         import traceback
         error_detail = traceback.format_exc()
         return f"<h2>OAuth Callback 發生錯誤</h2><pre>{error_detail}</pre>", 500
