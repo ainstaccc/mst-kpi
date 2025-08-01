@@ -1,102 +1,84 @@
-import os
-from flask import Flask, session, redirect, url_for, render_template
-from authlib.integrations.flask_client import OAuth
-from flask_session import Session  # ✅ 新增：用於 Server-Side Session
+# app.py
+# ---------------------------
+# 門市考核查詢平台 - Flask 後端程式
+# 功能：
+# 1. 讀取專案資料夾中最新的 Excel 檔
+# 2. 提供查詢 API
+# 3. 顯示首頁（查詢頁面）
+# ---------------------------
 
-# --------------------------
-# 建立 Flask App
-# --------------------------
+from flask import Flask, render_template, request, jsonify
+import os
+import pandas as pd
+
 app = Flask(__name__)
 
-# 設定 SECRET_KEY（Render 環境變數）
-app.secret_key = os.environ.get("SECRET_KEY")
+# 設定資料夾
+DATA_FOLDER = "./data"
 
-# --------------------------
-# 啟用 Server-Side Session
-# --------------------------
-# 使用伺服器端存儲 Session 避免 Render 重啟導致的 state 錯誤
-app.config["SESSION_TYPE"] = "filesystem"  # 檔案系統存儲
-app.config["SESSION_PERMANENT"] = False    # 不永久保存
-Session(app)
+# 取得最新 Excel 檔案
+def get_latest_excel():
+    files = [f for f in os.listdir(DATA_FOLDER) if f.endswith(".xlsx")]
+    if not files:
+        return None
+    # 按照檔名排序，最新的放最後
+    files.sort()
+    latest_file = files[-1]
+    return os.path.join(DATA_FOLDER, latest_file)
 
-# --------------------------
-# Google OAuth 設定
-# --------------------------
-oauth = OAuth(app)
-oauth.register(
-    name="google",
-    client_id=os.environ.get("GOOGLE_CLIENT_ID"),
-    client_secret=os.environ.get("GOOGLE_CLIENT_SECRET"),
-    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
-    client_kwargs={"scope": "openid email profile"},
-    userinfo_endpoint="https://openidconnect.googleapis.com/v1/userinfo"
-)
+# 讀取 Excel 分頁
+def load_sheets():
+    latest_excel = get_latest_excel()
+    if latest_excel is None:
+        return {}
 
-# --------------------------
+    # 讀取四個指定分頁
+    sheets = pd.read_excel(latest_excel, sheet_name=None)
+    result = {}
+
+    # 固定分頁名稱
+    target_sheets = [
+        "門店 考核總表",
+        "人效分析",
+        "店長副店 考核明細",
+        "店員儲備 考核明細"
+    ]
+    for sheet_name in target_sheets:
+        if sheet_name in sheets:
+            result[sheet_name] = sheets[sheet_name]
+        else:
+            result[sheet_name] = pd.DataFrame()  # 沒資料給空表
+
+    return result
+
+
 # 首頁
-# --------------------------
 @app.route("/")
 def index():
-    """
-    首頁：如果已登入則顯示使用者 Email，否則顯示登入按鈕
-    """
-    user = session.get("user")
-    if user:
-        return render_template("index.html", email=user.get("email"))
-    return render_template("index.html", email=None)
+    return render_template("index.html")
 
-# --------------------------
-# 登入 Google
-# --------------------------
-@app.route("/login")
-def login():
-    """
-    點擊登入後，導向 Google OAuth
-    """
-    # 使用 url_for 產生完整 HTTPS 回調網址
-    redirect_uri = url_for("callback", _external=True, _scheme="https")
-    return oauth.google.authorize_redirect(redirect_uri)
 
-# --------------------------
-# Google OAuth 回調（含錯誤顯示）
-# --------------------------
-@app.route("/callback")
-def callback():
-    try:
-        # Step 1: 取得 token
-        token = oauth.google.authorize_access_token()
+# 查詢 API
+@app.route("/query", methods=["POST"])
+def query_data():
+    # 取得使用者輸入
+    query_type = request.json.get("queryType", "store")  # store / manager
+    filters = request.json.get("filters", {})
 
-        # Step 2: 直接使用 userinfo endpoint 取得使用者資料
-        resp = oauth.google.get("userinfo")
-        userinfo = resp.json() if resp else {}
+    sheets = load_sheets()
+    if not sheets:
+        return jsonify({"error": "找不到 Excel 資料"}), 400
 
-        # Step 3: 確認是否取得 email
-        if not userinfo or "email" not in userinfo:
-            return f"<h2>OAuth 錯誤</h2><p>無法取得 email，回傳內容:</p><pre>{userinfo}</pre>"
+    # 範例：直接回傳每個分頁的筆數
+    response = {
+        name: len(df)
+        for name, df in sheets.items()
+    }
 
-        # Step 4: 寫入 session
-        session["user"] = {"email": userinfo.get("email")}
+    return jsonify(response)
 
-        return redirect(url_for("index"))
 
-    except Exception:
-        import traceback
-        error_detail = traceback.format_exc()
-        return f"<h2>OAuth Callback 發生錯誤</h2><pre>{error_detail}</pre>", 500
-
-# --------------------------
-# 登出
-# --------------------------
-@app.route("/logout")
-def logout():
-    """
-    登出並清空 session
-    """
-    session.clear()
-    return redirect(url_for("index"))
-
-# --------------------------
-# Render 運行入口
-# --------------------------
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    # Render 用的埠號設定
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=True)
