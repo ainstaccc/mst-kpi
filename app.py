@@ -1,14 +1,23 @@
 import os
 from flask import Flask, session, redirect, url_for, render_template
 from authlib.integrations.flask_client import OAuth
- 
+from flask_session import Session  # ✅ 新增：用於 Server-Side Session
+
 # --------------------------
 # 建立 Flask App
 # --------------------------
 app = Flask(__name__)
 
-# 強制使用 SECRET_KEY（Render 環境變數設定）
+# 設定 SECRET_KEY（Render 環境變數）
 app.secret_key = os.environ.get("SECRET_KEY")
+
+# --------------------------
+# 啟用 Server-Side Session
+# --------------------------
+# 使用伺服器端存儲 Session 避免 Render 重啟導致的 state 錯誤
+app.config["SESSION_TYPE"] = "filesystem"  # 檔案系統存儲
+app.config["SESSION_PERMANENT"] = False    # 不永久保存
+Session(app)
 
 # --------------------------
 # Google OAuth 設定
@@ -21,10 +30,6 @@ oauth.register(
     server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
     client_kwargs={"scope": "openid email profile"},
 )
-
-# Render 的環境變數中需設定 GOOGLE_REDIRECT_URI
-GOOGLE_REDIRECT_URI = os.environ.get("GOOGLE_REDIRECT_URI")
-
 
 # --------------------------
 # 首頁
@@ -39,7 +44,6 @@ def index():
         return render_template("index.html", email=user.get("email"))
     return render_template("index.html", email=None)
 
-
 # --------------------------
 # 登入 Google
 # --------------------------
@@ -48,16 +52,10 @@ def login():
     """
     點擊登入後，導向 Google OAuth
     """
-    redirect_uri = GOOGLE_REDIRECT_URI or url_for("callback", _external=True)
+    # 使用 url_for 產生完整 HTTPS 回調網址
+    redirect_uri = url_for("callback", _external=True, _scheme="https")
     return oauth.google.authorize_redirect(redirect_uri)
 
-
-# --------------------------
-# Google OAuth 回調
-# --------------------------
-# --------------------------
-# Google OAuth 回調
-# --------------------------
 # --------------------------
 # Google OAuth 回調（含錯誤顯示）
 # --------------------------
@@ -101,7 +99,6 @@ def logout():
     """
     session.clear()
     return redirect(url_for("index"))
-
 
 # --------------------------
 # Render 運行入口
