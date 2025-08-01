@@ -2,15 +2,27 @@
 <html lang="zh-Hant">
 <head>
     <meta charset="UTF-8">
-    <title>Render OAuth Demo</title>
+    <title>門市職能評核系統</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    {% if email %}
-        <h1>👋 歡迎 {{ email }}</h1>
-        <a href="{{ url_for('logout') }}">登出</a>
-    {% else %}
-        <h1>Hello, Render!</h1>
-        <a href="{{ url_for('login') }}">登入 Google</a>
-    {% endif %}
+    <h1>歡迎使用門市職能評核系統</h1>
+
+    <!-- 這裡原本是 login 改成 index，避免 BuildError -->
+    <a href="{{ url_for('index') }}">登入 Google</a>
+
+    <h2>目前可用的檔案：</h2>
+    <ul>
+        {% for file in files %}
+        <li>{{ file }}</li>
+        {% endfor %}
+    </ul>
+
+    <h2>查詢結果：</h2>
+    <ul>
+        {% for result in results %}
+        <li>{{ result }}</li>
+        {% endfor %}
+    </ul>
 </body>
 </html>
