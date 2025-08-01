@@ -1,2 +1,16 @@
-<h1>Hello, Render!</h1>
-
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <title>Render OAuth Demo</title>
+</head>
+<body>
+    {% if email %}
+        <h1>👋 歡迎 {{ email }}</h1>
+        <a href="{{ url_for('logout') }}">登出</a>
+    {% else %}
+        <h1>Hello, Render!</h1>
+        <a href="{{ url_for('login') }}">登入 Google</a>
+    {% endif %}
+</body>
+</html>
