@@ -1,7 +1,7 @@
 import os
 from flask import Flask, session, redirect, url_for, render_template
 from authlib.integrations.flask_client import OAuth
-
+ 
 # --------------------------
 # 建立 Flask App
 # --------------------------
