@@ -1,8 +1,10 @@
-Flask
+Flask==2.3.3
 Authlib
 gspread
 oauth2client
 pandas
 plotly
 pdfkit
-gunicorn
+gunicorn==21.2.0
+requests==2.31.0
+python-dotenv==1.0.1
