@@ -58,6 +58,9 @@ def login():
 # --------------------------
 # Google OAuth 回調
 # --------------------------
+# --------------------------
+# Google OAuth 回調（含錯誤顯示）
+# --------------------------
 @app.route("/callback")
 def callback():
     try:
@@ -68,14 +71,15 @@ def callback():
         userinfo = None
         try:
             userinfo = oauth.google.parse_id_token(token)
-        except Exception:
+        except Exception as e:
+            print("Parse ID Token Error:", e)
             # 若解析失敗，退而求其次呼叫 userinfo API
             resp = oauth.google.get("userinfo")
             userinfo = resp.json() if resp else {}
 
         # 檢查 userinfo 是否正確
         if not userinfo or "email" not in userinfo:
-            raise Exception(f"無法取得 email, 回傳內容: {userinfo}")
+            return f"<h2>OAuth 錯誤</h2><p>無法取得 email，回傳內容:</p><pre>{userinfo}</pre>"
 
         # 寫入 session
         session["user"] = {"email": userinfo.get("email")}
@@ -84,11 +88,8 @@ def callback():
 
     except Exception as e:
         import traceback
-        print("OAuth Callback Error:", e)
-        traceback.print_exc()
-        return f"OAuth Callback 發生錯誤：{e}", 500
-
-
+        error_detail = traceback.format_exc()
+        return f"<h2>OAuth Callback 發生錯誤</h2><pre>{error_detail}</pre>", 500
 
 # --------------------------
 # 登出
