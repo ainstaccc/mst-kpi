@@ -1,30 +1,36 @@
-# app.py
-# -----------------------------
-# 這是一個簡單的 Flask Web App
-# 功能：
-# 1. 首頁顯示 index.html
-# 2. 提供 /login 測試頁面避免錯誤
-# -----------------------------
-
-from flask import Flask, render_template
+from flask import Flask, redirect, url_for, session
+from authlib.integrations.flask_client import OAuth
+import os
 
 app = Flask(__name__)
+app.secret_key = os.environ.get("SECRET_KEY", "test_secret")
 
-# 首頁路由
-@app.route("/")
-def index():
-    # 這裡模擬傳給模板的變數
-    files = []               # 檔案清單
-    results = []             # 結果列表
-    selected_file = None     # 選擇的檔案
+# Google OAuth 設定
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=os.environ.get("GOOGLE_CLIENT_ID"),
+    client_secret=os.environ.get("GOOGLE_CLIENT_SECRET"),
+    access_token_url='https://oauth2.googleapis.com/token',
+    authorize_url='https://accounts.google.com/o/oauth2/auth',
+    client_kwargs={
+        'scope': 'openid email profile',
+        'redirect_uri': os.environ.get("OAUTH_REDIRECT_URI", "https://你的render網址/login/callback")
+    }
+)
 
-    return render_template("index.html", files=files, results=results, selected_file=selected_file)
+@app.route('/')
+def home():
+    return app.send_static_file('index.html')
 
-# 登入路由（目前是假的，只回傳文字）
-@app.route("/login")
-def login():
-    return "這是登入頁面，之後可以接 Google OAuth"
+@app.route('/login/google')
+def login_google():
+    return google.authorize_redirect(url_for('auth_callback', _external=True))
 
-# 主程式入口
-if __name__ == "__main__":
-    app.run(debug=True)
+@app.route('/login/callback')
+def auth_callback():
+    token = google.authorize_access_token()
+    user_info = google.parse_id_token(token)
+    # 這裡可以檢查 email 是否符合你公司 Gmail 名單
+    session['user'] = user_info
+    return f"登入成功！歡迎 {user_info['email']}"
