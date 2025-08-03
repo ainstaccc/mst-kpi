@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>米斯特 門市考核查詢系統</title>
+
+    <!-- 載入 Tailwind -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -20,6 +22,8 @@
             }
         }
     </script>
+
+    <!-- Google Fonts -->
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;500;600;700&display=swap');
         body {
@@ -28,6 +32,7 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-gray-50 to-gray-100 min-h-screen">
+
     <!-- 主容器 -->
     <div class="min-h-screen flex items-center justify-center px-4 py-8">
         <div class="max-w-md w-full">
@@ -37,7 +42,8 @@
                 <div class="text-center mb-8">
                     <div class="inline-flex items-center justify-center w-16 h-16 bg-orange-primary rounded-full mb-4">
                         <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
+                                  d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
                         </svg>
                     </div>
                     <h1 class="text-2xl font-bold text-gray-dark mb-2">米斯特</h1>
@@ -55,7 +61,7 @@
 
                 <!-- Google 登入按鈕 -->
                 <button 
-                    onclick="handleGoogleLogin()"
+                    onclick="handleGoogleLogin(event)"
                     class="w-full bg-white border-2 border-gray-200 hover:border-orange-primary text-gray-dark font-medium py-3 px-4 rounded-lg transition-all duration-200 hover:shadow-md flex items-center justify-center space-x-3 group"
                 >
                     <!-- Google Icon -->
@@ -79,19 +85,19 @@
             <!-- 版權資訊 -->
             <div class="text-center mt-6">
                 <p class="text-sm text-gray-light">
-                    © 2025 米斯特門市考核系統. All rights reserved.
+                    © 2025 米斯特門市考核查詢系統. All rights reserved.
                 </p>
             </div>
         </div>
     </div>
 
+    <!-- 模擬 Google 登入流程 -->
     <script>
-        function handleGoogleLogin() {
-            // 模擬 Google 登入流程
+        function handleGoogleLogin(event) {
             const button = event.target.closest('button');
             const originalText = button.innerHTML;
-            
-            // 顯示載入狀態
+
+            // 顯示載入中
             button.innerHTML = `
                 <svg class="animate-spin w-5 h-5 text-orange-primary" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
@@ -100,8 +106,8 @@
                 <span>正在連接 Google...</span>
             `;
             button.disabled = true;
-            
-            // 模擬登入過程
+
+            // 模擬登入流程
             setTimeout(() => {
                 alert('這是示範版本。在實際應用中，這裡會重定向到 Google OAuth 登入頁面。');
                 button.innerHTML = originalText;
@@ -109,10 +115,10 @@
             }, 2000);
         }
 
-        // 添加鍵盤支援
+        // 支援 Enter 快捷鍵
         document.addEventListener('keydown', function(event) {
             if (event.key === 'Enter') {
-                handleGoogleLogin();
+                handleGoogleLogin(event);
             }
         });
     </script>
